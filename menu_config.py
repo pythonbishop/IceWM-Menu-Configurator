@@ -5,10 +5,8 @@ import tkinter.simpledialog
 import tkinter.filedialog
 import tkinter.messagebox
 
-apps_dir = "./applications"
-menu_path = "./menu"
-#apps_dir = "/usr/share/applications"
-#menu_dir = "~/.icewm/menu"
+#apps_dir = "./applications"
+apps_dir = "/usr/share/applications"
 encode = "utf-8"
 
 def load_apps_list(dir):
