@@ -1,0 +1,24 @@
+menu "Programs" folder {
+prog "ELinks" html /usr/bin/elinks %u
+prog "Firefox" firefox /usr/lib/firefox/firefox %u
+prog "i3" i3 i3
+prog "Notepadqq" notepadqq notepadqq %U
+prog "Thunar File Manager" org.xfce.thunar thunar %F
+prog "VLC media player" vlc /usr/bin/vlc --started-from-file %U
+prog "XTerm" xterm-color_48x48 xterm
+}
+
+menu "Utilities" folder {
+prog "Qt V4L2 test Utility" qv4l2 qv4l2
+prog "Qt V4L2 video capture utility" qvidcap qvidcap
+prog "Bulk Rename" org.xfce.thunar thunar --bulk-rename %F
+prog "UXTerm" xterm-color_48x48 uxterm
+prog "About Xfce" org.xfce.about xfce4-about
+prog "Avahi VNC Server Browser" network-wired /usr/bin/bvnc
+prog "Avahi Zeroconf Browser" network-wired /usr/bin/avahi-discover
+prog "Avahi SSH Server Browser" network-wired /usr/bin/bssh
+}
+
+menu "Settings" {
+prog "File Manager Settings" org.xfce.thunar thunar-settings
+}
