@@ -22,16 +22,22 @@ def load_apps_list(dir):
         name = None
         icon = None
         exec = None
-        in_desk_entry = False
+        in_desktop_entry = False
         with open(fpath, encoding=encode, errors='ignore') as f:
             lines = f.readlines()
+            desktop_entry_first = None
+            desktop_entry_last = None
             for line in lines:
-                if line == "[Desktop Entry]":
-                    in_desk_entry = True
-                if in_desk_entry and line.startswith("["):
-                    lines = lines[:lines.index(line)]
+                if line == "[Desktop Entry]\n" and not in_desktop_entry:
+                    in_desktop_entry = True
+                    desktop_entry_first = lines.index(line)
+                elif in_desktop_entry and (line[0] == "[" or line == "\n"):
+                    desktop_entry_last = lines.index(line)
+                    break
+            
+            desktop_entry = lines[desktop_entry_first:desktop_entry_last]
 
-            for line in lines:
+            for line in desktop_entry:
                 if line.startswith("Name="):
                     name = line[5:].rstrip("\n")
                 if line.startswith("Icon="):
@@ -40,7 +46,7 @@ def load_apps_list(dir):
                     exec = line[5:].rstrip("\n")
         if not icon:
             icon = name
-
+        
         apps[name] = "prog" + """ "{n}" """.format(n = name) + icon + " " + exec + "\n"
     return apps
 
@@ -111,10 +117,8 @@ class Application:
         self.tk.bind("<Left>", self.shift_list_focus)
         self.menu_tree.bind("<<TreeviewSelect>>", self.update_line_label)
         self.applications_listbox.bind("<<TreeviewSelect>>", self.update_apps_label)
-        try:
-            self.refresh_list()
-        except:
-            self.change_dir_warning()
+
+        self.refresh_list()
 
     def update_line_label(self, event):
         focused = self.menu_tree.focus()
@@ -172,46 +176,42 @@ class Application:
         self.delete_selected()
 
     def refresh_list(self):
-        apps = load_apps_list(self.apps_dir)
-        self.apps_by_name = apps
-        for item in self.applications_listbox.get_children():
-            self.applications_listbox.delete(item)
-        for name in apps.keys():
-            self.applications_listbox.insert("", 0, text=name, tags="file")
+        try:
+            apps = load_apps_list(self.apps_dir)
+        except FileNotFoundError:
+            self.change_dir_warning()
+        except BaseException:
+            self.popup_dialog("Error", "Something went wrong when loading .desktop files.")
+        else:
+            self.apps_by_name = apps
+            for item in self.applications_listbox.get_children():
+                self.applications_listbox.delete(item)
+            for name in apps.keys():
+                self.applications_listbox.insert("", 0, text=name, tags="file")
     
-    def about_dialog(self):
+    def popup_dialog(self, title : str, *lines : str):
         top = tkinter.Toplevel(self.tk, width=100, height=50)
         top.resizable(0, 0)
-        top.title("About")
-        tkinter.Label(top, text="created by pythonbishop").grid(column=0, row=0)
-        tkinter.Label(top, text="released 12/2/2022 (no versioning system yet)").grid(column=0, row=1)
+        top.title(title)
+        row = 0
+        for line in lines:
+            tkinter.Label(top, text=line).grid(column=0, row=row)
+            row += 1
+
+    def about_dialog(self):
+        self.popup_dialog("About", "created by pythonbishop", "updated 12/4/2022 (no versioning system yet)")
 
     def change_dir_warning(self):
-        top = tkinter.Toplevel(self.tk, width=100, height=50)
-        top.resizable(0, 0)
-        top.title("Change .desktop Directory")
-        tkinter.Label(top, text=f"{self.apps_dir} could not be found.").grid(column=0, row=0)
-        tkinter.Label(top, text="go to options -> Change .desktop Directory to correct folder").grid(column=0, row=1)
+        self.popup_dialog("Change .desktop Directory", f"{self.apps_dir} could not be found.", "go to options -> Change .desktop Directory to select correct folder")
 
     def help_dialog(self):
-        top = tkinter.Toplevel(self.tk, width=100, height=50)
-        top.resizable(0, 0)
-        top.title("Help")
-        tkinter.Label(top, text="WIP").grid(column=0, row=0)
-        tkinter.Label(top, text="mash keys till you find what the keybinds are").grid(column=0, row=1)
+        self.popup_dialog("Help", "WIP", "mash keys till you find what the keybinds are")
     
     def save_failed(self):
-        top = tkinter.Toplevel(self.tk, width=100, height=50)
-        top.resizable(0, 0)
-        top.title("Save Failed")
-        tkinter.Label(top, text="\t\t\toops  :(\t\t\t").grid(column=0, row=0)
+        self.popup_dialog("Save Failed", "\t\t\toops  :(\t\t\t")
     
     def save_success(self):
-        top = tkinter.Toplevel(self.tk, width=100, height=50)
-        top.resizable(0, 0)
-        top.title("")
-        tkinter.Label(top, text="File Saved").grid(column=0, row=0)
-        tkinter.Label(top, text="\t\t\t:)\t\t\t").grid(column=0, row=1)
+        self.popup_dialog("File Saved", "\t\t\t:)\t\t\t")
 
     def loadfile_dialog(self):
         menu_file = tkinter.filedialog.askopenfile("r")
